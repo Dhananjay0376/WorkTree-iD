@@ -62,7 +62,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
         onDB(db2);
       }
     });
-    return () => unsubscribe();
+    return () => { setTimeout(() => unsubscribe(), 0); };
   }, [projectId]);
 
   // Fetch missing collaborator profiles from Firestore
@@ -104,7 +104,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
       // PROJECT HANDSHAKE: if a request is accepted but user isn't in collaborators yet
       // (Requires modifying subscribeToProjectInvites to include accepted or adding a new listener)
     });
-    return () => unsubscribe();
+    return () => { setTimeout(() => unsubscribe(), 0); };
   }, [project?.id, isOwner]);
 
   // Handle invitation handshakes (Owner side)
@@ -146,7 +146,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
         saveProjectToFirestore(p);
       }
     });
-    return () => unsubscribe();
+    return () => { setTimeout(() => unsubscribe(), 0); };
   }, [project?.id, isOwner, viewerId]);
 
   if (!project) {

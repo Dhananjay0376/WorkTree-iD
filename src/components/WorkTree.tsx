@@ -309,10 +309,11 @@ function NodeRow({
                   />
                   <div className="flex items-center gap-2">
                     <Button
+                      type="button"
                       variant="secondary"
                       size="sm"
                       className="flex-1"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}
                       disabled={isUploading}
                     >
                       {isUploading ? (
@@ -674,10 +675,14 @@ export function WorkTree({
                   onSubmit={(e) => {
                     e.preventDefault();
                     const t = newTitle.trim();
-                    if (!t) return;
+                    const finalTitle = t || (displayType === 'photo' ? 'Photo' : displayType === 'video' ? 'Video' : '');
+                    if (!finalTitle) return;
+                    // Enforce media presence for media nodes
+                    if ((displayType === 'photo' || displayType === 'video') && !newMediaUrl) return;
+
                     const child: WorkNode = {
                       id: uid('n'),
-                      title: t,
+                      title: finalTitle,
                       type: nextChildType(node.type),
                       displayType,
                       done: false,

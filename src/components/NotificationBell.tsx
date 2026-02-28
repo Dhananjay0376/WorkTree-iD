@@ -12,6 +12,10 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        let mounted = true;
+        let unsubscribe: (() => void) | undefined;
+        let unsubscribeSent: (() => void) | undefined;
+
         if (!userId) {
             setRequests([]);
             setLastSeen(0);
@@ -20,22 +24,28 @@ export function NotificationBell({ userId }: { userId: string | null }) {
 
         // Fetch initials for lastSeen
         getUserProfile(userId).then(p => {
-            if (p) setLastSeen(p.lastViewedNotifications || 0);
+            if (mounted && p) setLastSeen(p.lastViewedNotifications || 0);
         });
 
-        const unsubscribe = subscribeToRequests(userId, (reqs) => {
-            setRequests(reqs);
+        unsubscribe = subscribeToRequests(userId, (reqs) => {
+            if (mounted) setRequests(reqs);
         });
-        const unsubscribeSent = subscribeToSentRequests(userId, (sent) => {
+        unsubscribeSent = subscribeToSentRequests(userId, (sent) => {
+            if (!mounted) return;
             sent.forEach(req => {
                 if (req.type === 'team_up' && req.status === 'accepted') {
                     finalizeTeamUp(req.fromUserId, req.toUserId);
                 }
             });
         });
+
         return () => {
-            if (unsubscribe) unsubscribe();
-            if (unsubscribeSent) unsubscribeSent();
+            mounted = false;
+            // Delay unsubscribe to avoid Firestore b815 assertion error during React unmount
+            setTimeout(() => {
+                if (unsubscribe) unsubscribe();
+                if (unsubscribeSent) unsubscribeSent();
+            }, 0);
         };
     }, [userId]);
 

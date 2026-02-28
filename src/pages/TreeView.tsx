@@ -264,10 +264,12 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
   const addChild = () => {
     if (!canEdit || !selected) return;
     const t = newTitle.trim();
-    if (!t) return;
+    const finalTitle = t || (displayType === 'photo' ? 'Photo' : displayType === 'video' ? 'Video' : '');
+    if (!finalTitle) return;
+    if ((displayType === 'photo' || displayType === 'video') && !newMediaUrl) return;
     const child: WorkNode = {
       id: uid('n'),
-      title: t,
+      title: finalTitle,
       type: nextChildType(selected.type),
       displayType,
       done: false,
@@ -671,7 +673,7 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
                       size="sm"
                       className="flex-1"
                       onClick={addChild}
-                      disabled={!canEdit || !selected || !newTitle.trim() || (displayType === 'link' && !newLinkUrl) || ((displayType === 'photo' || displayType === 'video') && !newMediaUrl)}
+                      disabled={!canEdit || !selected || (!newTitle.trim() && displayType !== 'photo' && displayType !== 'video') || (displayType === 'link' && !newLinkUrl) || ((displayType === 'photo' || displayType === 'video') && !newMediaUrl)}
                     >
                       <Plus size={16} /> Create Child
                     </Button>
