@@ -1,4 +1,5 @@
-import { db } from './firebase';
+const fs = require('fs');
+const content = `import { db } from './firebase';
 import type { User as FirebaseUser } from 'firebase/auth';
 import {
     collection,
@@ -37,7 +38,7 @@ export async function syncUserProfile(user: FirebaseUser, extraData: Partial<Aut
     try {
         const userRef = doc(db, USERS_COLLECTION, user.uid);
         const snap = await getDoc(userRef);
-
+        
         if (!snap.exists()) {
             const newUser: AuthUser = {
                 id: user.uid,
@@ -130,7 +131,7 @@ export function subscribeToProject(projectId: string, onUpdate: (p: Project) => 
  * Sends a project invitation (collaboration request).
  */
 export async function sendProjectInvite(fromUser: AuthUser, toUser: AuthUser, project: Project, role: 'editor' | 'viewer' = 'editor') {
-    const id = `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const id = \`req_\${Date.now()}_\${Math.random().toString(36).slice(2, 9)}\`;
     const request: CollaborationRequest = {
         id,
         type: 'project_invite',
@@ -202,19 +203,6 @@ export async function markNotificationsAsSeen(userId: string) {
 }
 
 /**
- * Searches for users by username prefix.
- */
-export async function searchUsersByUsername(usernameQuery: string): Promise<AuthUser[]> {
-    const q = query(
-        collection(db, USERS_COLLECTION),
-        where("username", ">=", usernameQuery.toLowerCase()),
-        where("username", "<=", usernameQuery.toLowerCase() + '\uf8ff')
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map(d => d.data() as AuthUser);
-}
-
-/**
  * Fetches all public projects.
  */
 export async function getPublicProjects(): Promise<Project[]> {
@@ -243,7 +231,7 @@ export function subscribeToSentRequests(userId: string, callback: (reqs: Collabo
  * Sends a team-up request.
  */
 export async function sendTeamUpRequest(fromUser: AuthUser, toUser: AuthUser) {
-    const id = `team_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const id = \`team_\${Date.now()}_\${Math.random().toString(36).slice(2, 9)}\`;
     const request: CollaborationRequest = {
         id,
         type: 'team_up',
@@ -266,7 +254,7 @@ export async function isTeamedUp(userId1: string, userId2: string): Promise<bool
     return snap.docs.some(d => {
         const data = d.data();
         return (data.fromUserId === userId1 && data.toUserId === userId2) ||
-            (data.fromUserId === userId2 && data.toUserId === userId1);
+               (data.fromUserId === userId2 && data.toUserId === userId1);
     });
 }
 
@@ -288,7 +276,7 @@ export function subscribeToTeamMembers(userId: string, callback: (users: AuthUse
         where("type", "==", "team_up"),
         where("status", "==", "accepted")
     );
-
+    
     return onSnapshot(q, async (snap) => {
         const memberIds = new Set<string>();
         snap.docs.forEach(d => {
@@ -296,7 +284,7 @@ export function subscribeToTeamMembers(userId: string, callback: (users: AuthUse
             if (data.fromUserId === userId) memberIds.add(data.toUserId);
             if (data.toUserId === userId) memberIds.add(data.fromUserId);
         });
-
+        
         const profiles = await getUserProfiles(Array.from(memberIds));
         callback(profiles.filter(Boolean) as AuthUser[]);
     });
@@ -313,3 +301,8 @@ export function subscribeToUserProjects(userId: string, callback: (projects: Pro
         console.error("subscribeToUserProjects failed:", err);
     });
 }
+\`;
+
+fs.writeFileSync('src/lib/firestore.ts', content, 'utf8');
+console.log('Successfully wrote firestore.ts');
+`;
