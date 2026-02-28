@@ -1,40 +1,16 @@
-import { storage } from "./firebase";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { saveMedia } from "./media";
 
 /**
- * Uploads a file to Firebase Storage and returns the download URL.
- * @param file The file to upload
- * @param path The path in storage (e.g., 'projects/projectId/nodeId/filename')
- * @param onProgress Optional callback for upload progress (0-100)
+ * Saves a file locally or for sync and returns a reference URL.
+ * signature kept for compatibility.
  */
 export async function uploadFile(
     file: File,
-    path: string,
+    _path: string, // kept for signature compatibility
     onProgress?: (progress: number) => void
 ): Promise<string> {
-    return new Promise((resolve, reject) => {
-        try {
-            const storageRef = ref(storage, path);
-            const uploadTask = uploadBytesResumable(storageRef, file);
-
-            uploadTask.on(
-                "state_changed",
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    if (onProgress) onProgress(progress);
-                },
-                (error) => {
-                    console.error("Error uploading file:", error);
-                    reject(error);
-                },
-                async () => {
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    resolve(downloadURL);
-                }
-            );
-        } catch (error) {
-            console.error("Fatal error in uploadFile:", error);
-            reject(error);
-        }
-    });
+    if (onProgress) onProgress(50); // Immediate feedback
+    const ref = await saveMedia(file);
+    if (onProgress) onProgress(100);
+    return ref;
 }

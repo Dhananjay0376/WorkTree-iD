@@ -6,6 +6,7 @@ import { ArrowLeft, Circle, CircleCheck, FileText, Image, Link as LinkIcon, Maxi
 import React, { useMemo, useState, useRef } from 'react';
 import { cn } from '../lib/utils';
 import { uploadFile } from '../lib/upload';
+import { MediaDisplay } from '../components/MediaDisplay';
 
 type LayoutNode = {
   node: WorkNode;
@@ -67,6 +68,14 @@ function nodeLabel(n: WorkNode) {
   return n.title || 'Untitled';
 }
 
+function filterMediaNodes(n: WorkNode): WorkNode {
+  const c = structuredClone(n);
+  c.children = c.children
+    .filter(child => child.displayType !== 'photo' && child.displayType !== 'video')
+    .map(filterMediaNodes);
+  return c;
+}
+
 export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) => void }) {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -90,8 +99,9 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
 
   const layout = useMemo(() => {
     if (!project) return null;
-    return buildLayout(project.tree);
-  }, [project]);
+    const tree = isOwner ? project.tree : filterMediaNodes(project.tree);
+    return buildLayout(tree);
+  }, [project, isOwner]);
 
   const selected = useMemo(() => {
     if (!project || !selectedId) return null;
@@ -441,18 +451,7 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
                       </div>
 
                       {(n.node.displayType === 'photo' || n.node.displayType === 'video') && n.node.mediaUrl && (
-                        <div className="mt-2 overflow-hidden rounded-lg border border-white/10 bg-black/40">
-                          {n.node.displayType === 'photo' ? (
-                            <img src={n.node.mediaUrl} alt={n.node.title} className="h-24 w-full object-cover" />
-                          ) : (
-                            <div className="relative h-24 w-full">
-                              <video src={n.node.mediaUrl} className="h-full w-full object-cover" />
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white/80">
-                                <Play size={24} />
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        <MediaDisplay mediaUrl={n.node.mediaUrl} type={n.node.displayType as any} title={n.node.title} className="mt-2 overflow-hidden rounded-lg border border-white/10 bg-black/40 h-24" />
                       )}
                     </div>
                   </button>

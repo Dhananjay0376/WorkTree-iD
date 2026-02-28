@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { canViewProject, getSessionUserId, projectProgress, saveDB, uid } from '../lib/storage';
 import { UserSearchInput } from '../components/UserSearchInput';
-import { sendProjectInvite, getUserProfile, subscribeToProjectInvites, saveProjectToFirestore, subscribeToProject, subscribeToSentRequests } from '../lib/firestore';
+import { sendProjectInvite, getUserProfiles, subscribeToProjectInvites, saveProjectToFirestore, subscribeToProject, subscribeToSentRequests } from '../lib/firestore';
 import type { CollaborationRequest } from '../lib/firestore';
 import type { AppDB, Project, AuthUser } from '../lib/storage';
 import { Card, Button, Input, Pill } from '../components/ui';
@@ -39,6 +39,14 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
   const dbRef = useRef(db);
   useEffect(() => { dbRef.current = db; }, [db]);
 
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
+
+  const fetchingUsers = useRef<Set<string>>(new Set());
+
   // Listen for remote project updates
   useEffect(() => {
     if (!projectId) return;
@@ -61,22 +69,31 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
   useEffect(() => {
     if (!project) return;
     const missingIds = [project.ownerId, ...project.collaborators.map(c => c.userId)]
-      .filter(id => !db.users[id]);
+      .filter(id => !db.users[id] && !fetchingUsers.current.has(id));
 
     if (missingIds.length === 0) return;
 
-    // Fetch all missing profiles in parallel
-    Promise.all(missingIds.map(id => getUserProfile(id))).then(profiles => {
+    missingIds.forEach(id => fetchingUsers.current.add(id));
+
+    getUserProfiles(missingIds).then((profiles: (AuthUser | null)[]) => {
+      if (!isMounted.current) return;
+
       const found = profiles.filter(Boolean) as AuthUser[];
       if (found.length > 0) {
-        const db2: AppDB = structuredClone(db);
+        const db2: AppDB = structuredClone(dbRef.current);
         found.forEach(u => {
           db2.users[u.id] = u;
+          fetchingUsers.current.delete(u.id);
         });
         onDB(db2);
       }
+    }).catch((err: any) => {
+      console.error("Batch getUserProfiles failed:", err);
+      missingIds.forEach(id => fetchingUsers.current.delete(id));
     });
-  }, [project?.id, project?.collaborators, db.users]);
+    // We join the IDs into a string to ensure the dependency array only changes
+    // when the *set* of IDs changes, not when the array reference changes.
+  }, [project?.id, project?.collaborators.map(c => c.userId).join(',')]);
 
   // Listen for real-time pending invites for this project
   useEffect(() => {
@@ -98,16 +115,20 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
     // but here we need to listen for when OUR SENT invites are accepted.
     // Let's add subscribeToProjectInvites variant or check sent requests.
     const unsubscribe = subscribeToSentRequests(viewerId, (sent) => {
+      if (!isMounted.current) return;
+      const currentProject = dbRef.current.projects[project.id];
+      if (!currentProject) return;
+
       const acceptedInvites = sent.filter(r =>
         r.type === 'project_invite' &&
         r.status === 'accepted' &&
-        r.projectId === project.id &&
-        !project.collaborators.some(c => c.userId === r.toUserId)
+        r.projectId === currentProject.id &&
+        !currentProject.collaborators.some(c => c.userId === r.toUserId)
       );
 
       if (acceptedInvites.length > 0) {
-        const db2: AppDB = structuredClone(db);
-        const p = db2.projects[project.id];
+        const db2: AppDB = structuredClone(dbRef.current);
+        const p = db2.projects[currentProject.id];
         acceptedInvites.forEach(inv => {
           p.collaborators.push({
             userId: inv.toUserId,
@@ -126,7 +147,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
       }
     });
     return () => unsubscribe();
-  }, [project?.id, isOwner, viewerId, project?.collaborators]);
+  }, [project?.id, isOwner, viewerId]);
 
   if (!project) {
     return (
@@ -364,6 +385,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
                 canEdit={canEdit}
                 onChange={(nextTree) => pushTree(nextTree)}
                 projectId={project.id}
+                isOwner={isOwner}
               />
             </div>
           </Card>

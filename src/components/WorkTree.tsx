@@ -5,6 +5,7 @@ import type { WorkNode, WorkNodeDisplayType, WorkNodeType } from '../lib/storage
 import { Button, Input, Pill, Textarea } from './ui';
 import { cn } from '../lib/utils';
 import { uploadFile } from '../lib/upload';
+import { MediaDisplay } from './MediaDisplay';
 
 const typeMeta: Record<WorkNodeType, { label: string; className: string }> = {
   root: { label: 'Root', className: 'bg-emerald-500/10 border-emerald-400/15 text-emerald-100' },
@@ -193,13 +194,7 @@ function NodeRow({
               >
                 {node.title}
                 {(node.displayType === 'photo' || node.displayType === 'video') && node.mediaUrl && (
-                  <div className="mt-2 max-w-sm overflow-hidden rounded-lg border border-white/10 bg-black/40">
-                    {node.displayType === 'photo' ? (
-                      <img src={node.mediaUrl} alt={node.title} className="h-40 w-full object-cover" />
-                    ) : (
-                      <video src={node.mediaUrl} controls className="h-40 w-full object-cover" />
-                    )}
-                  </div>
+                  <MediaDisplay mediaUrl={node.mediaUrl} type={node.displayType as any} title={node.title} className="mt-2 max-w-sm overflow-hidden rounded-lg border border-white/10 bg-black/40 h-40" />
                 )}
                 {node.displayType === 'link' && node.linkUrl && (
                   <div className="mt-1 text-xs text-indigo-400 truncate max-w-md">
@@ -393,11 +388,13 @@ export function WorkTree({
   onChange,
   canEdit,
   projectId,
+  isOwner,
 }: {
   value: WorkNode;
   onChange: (next: WorkNode) => void;
   canEdit: boolean;
   projectId?: string;
+  isOwner?: boolean;
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [addingTo, setAddingTo] = useState<string | null>(null);
@@ -433,6 +430,9 @@ export function WorkTree({
     };
 
     const walk = (n: WorkNode, depth: number) => {
+      // Filter out media nodes for non-owners
+      if (!isOwner && (n.displayType === 'photo' || n.displayType === 'video')) return;
+
       // When searching/filtering, keep ancestors of matches.
       if ((q || filterMode !== 'all') && !subtreeHasMatch(n)) return;
       rows.push({ node: n, depth });
@@ -442,7 +442,7 @@ export function WorkTree({
 
     walk(value, 0);
     return rows;
-  }, [value, expanded, filterMode, search]);
+  }, [value, expanded, filterMode, search, isOwner]);
 
   const allIds = useMemo(() => flattenAll(value), [value]);
 
