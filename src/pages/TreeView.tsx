@@ -16,10 +16,9 @@ type LayoutNode = {
 };
 
 function getNodeHeightUnits(node: WorkNode) {
-  if (node.displayType !== 'note') return 1;
-  const charsPerLine = 25;
-  const lines = Math.max(1, Math.ceil((node.title || '').length / charsPerLine));
-  return Math.max(1, Math.ceil(lines / 2));
+  if (node.displayType === 'note') return 2;
+  if ((node.displayType === 'photo' || node.displayType === 'video') && node.mediaUrl) return 3;
+  return 1;
 }
 
 function buildLayout(root: WorkNode) {
