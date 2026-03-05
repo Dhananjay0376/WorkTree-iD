@@ -400,12 +400,47 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
                     key={n.node.id}
                     className={
                       'absolute rounded-2xl border text-left transition ' +
+                      (n.node.displayType === 'note' ? 'overflow-auto resize bg-black/50 ' : '') +
                       (isSel
                         ? 'border-white/25 bg-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.10)] font-medium'
                         : 'border-white/10 bg-black/20 hover:bg-white/5')
                     }
-                    style={{ left: x, top: y, width: nodeW, minHeight: nodeH, height: 'auto' }}
-                    onClick={() => setSelectedId(n.node.id)}
+                    style={{
+                      left: x,
+                      top: y,
+                      width: n.node.displayType === 'note' && n.node.noteWidth ? n.node.noteWidth : nodeW,
+                      minHeight: nodeH,
+                      height: n.node.displayType === 'note' && n.node.noteHeight ? n.node.noteHeight : 'auto',
+                      resize: n.node.displayType === 'note' ? 'both' : undefined,
+                      overflow: n.node.displayType === 'note' ? 'auto' : undefined,
+                      boxSizing: 'border-box'
+                    }}
+                    onMouseUp={(e) => {
+                      if (n.node.displayType !== 'note' || !canEdit) return;
+                      const el = e.currentTarget;
+                      if (el.offsetWidth && el.offsetHeight &&
+                        (el.offsetWidth !== n.node.noteWidth || el.offsetHeight !== n.node.noteHeight)) {
+                        const update = (node: WorkNode): WorkNode => {
+                          const c = structuredClone(node) as WorkNode;
+                          if (c.id === n.node.id) {
+                            c.noteWidth = el.offsetWidth;
+                            c.noteHeight = el.offsetHeight;
+                          }
+                          c.children = c.children.map(update);
+                          return c;
+                        };
+                        updateProject((p) => (p.tree = update(p.tree)));
+                      }
+                    }}
+                    onClick={(e) => {
+                      if (n.node.displayType === 'note' && canEdit) {
+                        const el = e.currentTarget;
+                        const rect = el.getBoundingClientRect();
+                        const isResizingCorner = 'clientX' in e && (e as any).clientX > rect.right - 20 && (e as any).clientY > rect.bottom - 20;
+                        if (isResizingCorner) return;
+                      }
+                      setSelectedId(n.node.id)
+                    }}
                     type="button"
                   >
                     <div className="flex h-full flex-col justify-center px-4 py-3">

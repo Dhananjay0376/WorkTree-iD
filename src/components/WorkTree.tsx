@@ -172,22 +172,55 @@ function NodeRow({
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className={cn("min-w-0 flex-1", node.displayType === 'note' && "flex flex-col")}>
         <div className={cn(
           "flex flex-wrap gap-2",
-          node.displayType === 'note' ? "items-start" : "items-center"
+          node.displayType === 'note' ? "items-start flex-col" : "items-center"
         )}>
-          <Pill className={cn('border', typeMeta[node.type].className)}>{typeMeta[node.type].label}</Pill>
+          <Pill className={cn('border', typeMeta[node.type].className, node.displayType === 'note' && "w-fit")}>{typeMeta[node.type].label}</Pill>
 
           {!editing ? (
             node.displayType && node.displayType !== 'normal' ? (
               <div
                 className={cn(
-                  'w-full text-left text-sm font-medium text-white/90 whitespace-pre-wrap break-words leading-relaxed p-2.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition cursor-pointer h-auto',
+                  'text-left text-sm font-medium text-white/90 whitespace-pre-wrap break-words leading-relaxed p-2.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition cursor-pointer',
+                  node.displayType !== 'note' && 'w-full h-auto',
+                  node.displayType === 'note' && 'bg-black/50',
+                  node.displayType === 'note' && !node.noteWidth && 'w-full max-w-full',
                   !canEdit && 'pointer-events-none'
                 )}
-                onClick={() => {
+                style={
+                  node.displayType === 'note'
+                    ? {
+                      resize: 'both',
+                      overflow: 'auto',
+                      boxSizing: 'border-box',
+                      width: node.noteWidth ? `${node.noteWidth}px` : undefined,
+                      height: node.noteHeight ? `${node.noteHeight}px` : undefined,
+                      minWidth: '200px',
+                      minHeight: '60px',
+                      maxWidth: '100%',
+                    }
+                    : undefined
+                }
+                onMouseUp={(e) => {
+                  if (!canEdit || node.displayType !== 'note') return;
+                  const el = e.currentTarget;
+                  if (el.offsetWidth && el.offsetHeight &&
+                    (el.offsetWidth !== node.noteWidth || el.offsetHeight !== node.noteHeight)) {
+                    if (el.style.width || el.style.height) {
+                      onUpdateNodeData({ noteWidth: el.offsetWidth, noteHeight: el.offsetHeight });
+                    }
+                  }
+                }}
+                onClick={(e) => {
                   if (!canEdit) return;
+                  if (node.displayType === 'note') {
+                    const el = e.currentTarget;
+                    const rect = el.getBoundingClientRect();
+                    const isResizingCorner = e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20;
+                    if (isResizingCorner) return;
+                  }
                   setTitle(node.title);
                   setEditing(true);
                 }}
@@ -336,7 +369,33 @@ function NodeRow({
                 </div>
               )}
               {node.displayType === 'note' ? (
-                <Textarea value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
+                <textarea
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  autoFocus
+                  style={{
+                    resize: 'both',
+                    overflow: 'auto',
+                    boxSizing: 'border-box',
+                    width: node.noteWidth ? `${node.noteWidth}px` : undefined,
+                    height: node.noteHeight ? `${node.noteHeight}px` : undefined,
+                    minWidth: '200px',
+                    minHeight: '60px',
+                    maxWidth: '100%',
+                  }}
+                  onMouseUp={(e) => {
+                    const el = e.currentTarget;
+                    if (el.offsetWidth && el.offsetHeight &&
+                      (el.offsetWidth !== node.noteWidth || el.offsetHeight !== node.noteHeight)) {
+                      onUpdateNodeData({ noteWidth: el.offsetWidth, noteHeight: el.offsetHeight });
+                    }
+                  }}
+                  className={cn(
+                    "rounded-xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:border-white/20 focus:ring-2 focus:ring-white/15",
+                    !node.noteWidth && "w-full",
+                    !node.noteHeight && "h-[100px]"
+                  )}
+                />
               ) : (
                 <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-9" autoFocus />
               )}

@@ -31,6 +31,8 @@ export type WorkNode = {
   createdAt: number;
   linkUrl?: string;
   mediaUrl?: string;
+  noteWidth?: number;
+  noteHeight?: number;
 };
 
 export type Project = {
