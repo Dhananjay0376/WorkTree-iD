@@ -302,6 +302,7 @@ export default function Profile({ db, onDB }: { db: AppDB; onDB: (next: AppDB) =
                       visibility: 'private',
                       collaborators: [{ userId: profile.id, role: 'owner', addedAt: now }],
                       collaboratorIds: [profile.id],
+                      editorIds: [],
                       invited: [],
                       createdAt: now,
                       updatedAt: now,

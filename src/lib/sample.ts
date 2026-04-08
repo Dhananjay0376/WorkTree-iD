@@ -112,6 +112,7 @@ export function ensureSeed(db: AppDB) {
       { userId: bobId, role: 'editor', addedAt: now - 1000 * 60 * 60 * 23 },
     ],
     collaboratorIds: [aliceId, bobId],
+    editorIds: [bobId],
     invited: [],
     createdAt: now - 1000 * 60 * 60 * 24,
     updatedAt: now - 1000 * 60 * 30,

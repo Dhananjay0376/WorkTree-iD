@@ -33,15 +33,27 @@ service cloud.firestore {
 
     // Projects
     match /projects/{projectId} {
-      // Anyone with the ID can read for now (simplified) 
-      // but ideally check collaborators list
       allow read: if request.auth != null;
       
-      // Only owner can write the project doc
-      allow write: if request.auth != null && (
+      allow create: if request.auth != null && (
         (resource == null && request.resource.data.ownerId == request.auth.uid) ||
-        (resource != null && resource.data.ownerId == request.auth.uid)
+        false
       );
+
+      allow update: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        (
+          request.auth.uid in resource.data.editorIds &&
+          request.resource.data.ownerId == resource.data.ownerId &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.collaborators == resource.data.collaborators &&
+          request.resource.data.collaboratorIds == resource.data.collaboratorIds &&
+          request.resource.data.editorIds == resource.data.editorIds &&
+          request.resource.data.invited == resource.data.invited
+        )
+      );
+
+      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
     }
     
     // Default: Deny everything else

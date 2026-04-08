@@ -43,6 +43,7 @@ export type Project = {
   visibility: Visibility;
   collaborators: Collaborator[];
   collaboratorIds: string[]; // for easy Firestore querying
+  editorIds: string[]; // for easy Firestore rules checks
   invited: string[]; // userIds invited
   createdAt: number;
   updatedAt: number;
@@ -152,6 +153,12 @@ export function canViewProject(viewerId: string | null, project: Project) {
   return project.collaborators.some((c) => c.userId === viewerId);
 }
 
+export function canEditProject(viewerId: string | null, project: Project) {
+  if (!viewerId) return false;
+  if (viewerId === project.ownerId) return true;
+  return project.collaborators.some((c) => c.userId === viewerId && (c.role === 'owner' || c.role === 'editor'));
+}
+
 export function normalizeProject(project: Project, updatedAt = Date.now()): Project {
   const seen = new Set<string>();
   const collaborators: Collaborator[] = [];
@@ -174,11 +181,19 @@ export function normalizeProject(project: Project, updatedAt = Date.now()): Proj
   }
 
   const collaboratorIds = Array.from(new Set([project.ownerId, ...collaborators.map((collaborator) => collaborator.userId)]));
+  const editorIds = Array.from(
+    new Set(
+      collaborators
+        .filter((collaborator) => collaborator.role === 'editor')
+        .map((collaborator) => collaborator.userId)
+    )
+  );
 
   return {
     ...project,
     collaborators,
     collaboratorIds,
+    editorIds,
     updatedAt,
   };
 }

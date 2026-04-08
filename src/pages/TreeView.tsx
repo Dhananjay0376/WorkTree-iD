@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { AppDB, Project, WorkNode, WorkNodeDisplayType } from '../lib/storage';
-import { canViewProject, getSessionUserId, normalizeProject, projectProgress, saveDB, uid } from '../lib/storage';
+import { canEditProject, canViewProject, getSessionUserId, normalizeProject, projectProgress, saveDB, uid } from '../lib/storage';
 import { Card, Button, Input, Pill, Textarea } from '../components/ui';
 import { ArrowLeft, Circle, CircleCheck, FileText, Image, Link as LinkIcon, Maximize2, Minimize2, Minus, Play, Plus, RotateCcw, Save, Trash2, Type, ExternalLink, Loader2 } from 'lucide-react';
 import React, { useMemo, useState, useRef } from 'react';
@@ -84,10 +84,7 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
 
   const canView = project ? canViewProject(viewerId, project) : false;
   const isOwner = viewerId && project ? viewerId === project.ownerId : false;
-  const canEdit =
-    !!viewerId &&
-    !!project &&
-    (isOwner || project.collaborators.some((c) => c.userId === viewerId && (c.role === 'owner' || c.role === 'editor')));
+  const canEdit = project ? canEditProject(viewerId, project) : false;
 
   const [zoom, setZoom] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -185,7 +182,7 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
     const nextProject = db2.projects[project.id];
     saveDB(db2);
     onDB(db2);
-    if (isOwner) {
+    if (canEdit) {
       void saveProjectToFirestore(nextProject).catch((err) => {
         console.error('Failed to sync tree view project to Firestore:', err);
       });

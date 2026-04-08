@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { canViewProject, getSessionUserId, normalizeProject, projectProgress, saveDB, uid } from '../lib/storage';
+import { canEditProject, canViewProject, getSessionUserId, normalizeProject, projectProgress, saveDB, uid } from '../lib/storage';
 import { UserSearchInput } from '../components/UserSearchInput';
 import { sendProjectInvite, getUserProfiles, subscribeToProjectInvites, saveProjectToFirestore, subscribeToProject, subscribeToSentRequests } from '../lib/firestore';
 import type { CollaborationRequest } from '../lib/firestore';
@@ -19,7 +19,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
 
   const canView = project ? canViewProject(viewerId, project) : false;
   const isOwner = viewerId && project ? viewerId === project.ownerId : false;
-  const canEdit = !!viewerId && !!project && (isOwner || project.collaborators.some((c) => c.userId === viewerId && (c.role === 'owner' || c.role === 'editor')));
+  const canEdit = project ? canEditProject(viewerId, project) : false;
 
   const [inviteMsg, setInviteMsg] = useState<string | null>(null);
   const [inviteErr, setInviteErr] = useState<string | null>(null);
@@ -195,7 +195,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
       const nextProject = db2.projects[project.id];
       saveDB(db2);
       onDB(db2);
-      if (isOwner) {
+      if (canEdit) {
         void saveProjectToFirestore(nextProject).catch((err) => {
           console.error('Failed to sync project to Firestore:', err);
         });
