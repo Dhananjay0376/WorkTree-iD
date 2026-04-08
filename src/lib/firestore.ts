@@ -113,6 +113,17 @@ export async function saveProjectToFirestore(project: Project) {
     });
 }
 
+export async function getProjectById(projectId: string): Promise<Project | null> {
+    try {
+        const projectRef = doc(db, PROJECTS_COLLECTION, projectId);
+        const snap = await getDoc(projectRef);
+        return snap.exists() ? normalizeProject(snap.data() as Project) : null;
+    } catch (err) {
+        console.error("getProjectById failed:", err);
+        return null;
+    }
+}
+
 /**
  * Subscribes to project updates in real-time.
  */

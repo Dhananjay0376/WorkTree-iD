@@ -7,7 +7,7 @@ import React, { useMemo, useState, useRef } from 'react';
 import { cn } from '../lib/utils';
 import { uploadFile } from '../lib/upload';
 import { MediaDisplay } from '../components/MediaDisplay';
-import { saveProjectToFirestore } from '../lib/firestore';
+import { getProjectById, saveProjectToFirestore } from '../lib/firestore';
 
 type LayoutNode = {
   node: WorkNode;
@@ -91,6 +91,7 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
   const [title, setTitle] = useState('');
   const [displayType, setDisplayType] = useState<WorkNodeDisplayType>('normal');
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isHydratingProject, setIsHydratingProject] = useState(() => !!projectId && !project);
 
   const prog = useMemo(() => (project ? projectProgress(project.tree) : { done: 0, total: 0, pct: 0 }), [project]);
 
@@ -124,6 +125,34 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
   const newFileInputRef = useRef<HTMLInputElement>(null);
 
   const [newTitle, setNewTitle] = useState('');
+  const dbRef = useRef(db);
+
+  React.useEffect(() => {
+    dbRef.current = db;
+  }, [db]);
+
+  React.useEffect(() => {
+    setIsHydratingProject(!!projectId && !project);
+  }, [projectId, project]);
+
+  React.useEffect(() => {
+    if (!projectId || project) return;
+    let cancelled = false;
+
+    void getProjectById(projectId).then((remote) => {
+      if (cancelled) return;
+      if (remote) {
+        const db2: AppDB = structuredClone(dbRef.current);
+        db2.projects[projectId] = remote;
+        onDB(db2);
+      }
+      setIsHydratingProject(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, project, onDB]);
 
   const nextChildType = (type: WorkNode['type']): WorkNode['type'] => {
     switch (type) {
@@ -139,6 +168,17 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
       setTitle(selected.title);
     }
   }, [selected?.id]);
+
+  if (!project && isHydratingProject) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-10">
+        <Card className="p-6">
+          <div className="text-lg font-semibold text-white">Loading project...</div>
+          <div className="mt-2 text-white/70">Refreshing the latest project tree.</div>
+        </Card>
+      </div>
+    );
+  }
 
   if (!project) {
     return (

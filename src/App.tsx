@@ -24,6 +24,11 @@ function AppShell() {
     return seeded;
   });
 
+  const updateDB = (next: AppDB) => {
+    saveDB(next);
+    setDB(next);
+  };
+
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (!e.key) return;
@@ -36,15 +41,15 @@ function AppShell() {
   return (
     <div className="min-h-screen text-white">
       <AuroraBackground />
-      <TopNav db={db} onDB={setDB} />
+      <TopNav db={db} onDB={updateDB} />
       <Routes>
         <Route path="/" element={<Home db={db} />} />
-        <Route path="/auth" element={<Auth onDB={setDB} />} />
+        <Route path="/auth" element={<Auth onDB={updateDB} />} />
         <Route path="/explore" element={<Explore db={db} />} />
         <Route path="/about" element={<About />} />
-        <Route path="/u/:userId" element={<Profile db={db} onDB={setDB} />} />
-        <Route path="/p/:projectId" element={<ProjectPage db={db} onDB={setDB} />} />
-        <Route path="/p/:projectId/tree" element={<TreeView db={db} onDB={setDB} />} />
+        <Route path="/u/:userId" element={<Profile db={db} onDB={updateDB} />} />
+        <Route path="/p/:projectId" element={<ProjectPage db={db} onDB={updateDB} />} />
+        <Route path="/p/:projectId/tree" element={<TreeView db={db} onDB={updateDB} />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />

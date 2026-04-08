@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { canEditProject, canViewProject, getSessionUserId, normalizeProject, projectProgress, saveDB, uid } from '../lib/storage';
 import { UserSearchInput } from '../components/UserSearchInput';
-import { sendProjectInvite, getUserProfiles, subscribeToProjectInvites, saveProjectToFirestore, subscribeToProject, subscribeToSentRequests } from '../lib/firestore';
+import { sendProjectInvite, getProjectById, getUserProfiles, subscribeToProjectInvites, saveProjectToFirestore, subscribeToProject, subscribeToSentRequests } from '../lib/firestore';
 import type { CollaborationRequest } from '../lib/firestore';
 import type { AppDB, Project, AuthUser } from '../lib/storage';
 import { Card, Button, Input, Pill } from '../components/ui';
@@ -25,6 +25,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
   const [inviteErr, setInviteErr] = useState<string | null>(null);
   const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor');
   const [pendingReqs, setPendingReqs] = useState<CollaborationRequest[]>([]);
+  const [isHydratingProject, setIsHydratingProject] = useState(() => !!projectId && !project);
 
   const prog = useMemo(() => (project ? projectProgress(project.tree) : { done: 0, total: 0, pct: 0 }), [project]);
 
@@ -47,6 +48,10 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
 
   const fetchingUsers = useRef<Set<string>>(new Set());
 
+  useEffect(() => {
+    setIsHydratingProject(!!projectId && !project);
+  }, [projectId, project]);
+
   // Listen for remote project updates
   useEffect(() => {
     if (!projectId) return;
@@ -61,9 +66,29 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
         db2.projects[projectId] = remote;
         onDB(db2);
       }
+      setIsHydratingProject(false);
     });
     return () => { setTimeout(() => unsubscribe(), 0); };
   }, [projectId]);
+
+  useEffect(() => {
+    if (!projectId || project) return;
+    let cancelled = false;
+
+    void getProjectById(projectId).then((remote) => {
+      if (cancelled) return;
+      if (remote) {
+        const db2: AppDB = structuredClone(dbRef.current);
+        db2.projects[projectId] = remote;
+        onDB(db2);
+      }
+      setIsHydratingProject(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, project, onDB]);
 
   // Fetch missing collaborator profiles from Firestore
   useEffect(() => {
@@ -142,6 +167,17 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
     });
     return () => { setTimeout(() => unsubscribe(), 0); };
   }, [project?.id, isOwner, viewerId]);
+
+  if (!project && isHydratingProject) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-10">
+        <Card className="p-6">
+          <div className="text-lg font-semibold text-white">Loading project...</div>
+          <div className="mt-2 text-white/70">Refreshing the latest project data.</div>
+        </Card>
+      </div>
+    );
+  }
 
   if (!project) {
     return (
