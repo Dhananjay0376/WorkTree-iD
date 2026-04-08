@@ -404,10 +404,11 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
                     key={n.node.id}
                     className={
                       'absolute rounded-2xl border text-left transition ' +
-                      (n.node.displayType === 'note' ? 'overflow-auto resize bg-black/50 ' : '') +
+                      'bg-black/50 ' +
+                      (n.node.displayType === 'note' ? 'overflow-auto resize ' : '') +
                       (isSel
-                        ? 'border-white/25 bg-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.10)] font-medium'
-                        : 'border-white/10 bg-black/20 hover:bg-white/5')
+                        ? 'border-white/25 shadow-[0_0_0_1px_rgba(255,255,255,0.10)] font-medium'
+                        : 'border-white/10 hover:bg-black/60')
                     }
                     style={{
                       left: x,
