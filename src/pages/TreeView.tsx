@@ -1,12 +1,13 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { AppDB, Project, WorkNode, WorkNodeDisplayType } from '../lib/storage';
-import { canViewProject, getSessionUserId, projectProgress, saveDB, uid } from '../lib/storage';
+import { canViewProject, getSessionUserId, normalizeProject, projectProgress, saveDB, uid } from '../lib/storage';
 import { Card, Button, Input, Pill, Textarea } from '../components/ui';
 import { ArrowLeft, Circle, CircleCheck, FileText, Image, Link as LinkIcon, Maximize2, Minimize2, Minus, Play, Plus, RotateCcw, Save, Trash2, Type, ExternalLink, Loader2 } from 'lucide-react';
 import React, { useMemo, useState, useRef } from 'react';
 import { cn } from '../lib/utils';
 import { uploadFile } from '../lib/upload';
 import { MediaDisplay } from '../components/MediaDisplay';
+import { saveProjectToFirestore } from '../lib/firestore';
 
 type LayoutNode = {
   node: WorkNode;
@@ -180,9 +181,15 @@ export default function TreeView({ db, onDB }: { db: AppDB; onDB: (next: AppDB) 
     const db2: AppDB = structuredClone(db);
     const p = db2.projects[project.id];
     patch(p);
-    p.updatedAt = Date.now();
+    db2.projects[project.id] = normalizeProject(p);
+    const nextProject = db2.projects[project.id];
     saveDB(db2);
     onDB(db2);
+    if (isOwner) {
+      void saveProjectToFirestore(nextProject).catch((err) => {
+        console.error('Failed to sync tree view project to Firestore:', err);
+      });
+    }
   };
 
   const toggleDone = (id: string) => {

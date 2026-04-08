@@ -152,6 +152,37 @@ export function canViewProject(viewerId: string | null, project: Project) {
   return project.collaborators.some((c) => c.userId === viewerId);
 }
 
+export function normalizeProject(project: Project, updatedAt = Date.now()): Project {
+  const seen = new Set<string>();
+  const collaborators: Collaborator[] = [];
+
+  project.collaborators.forEach((collaborator) => {
+    if (seen.has(collaborator.userId)) return;
+    seen.add(collaborator.userId);
+    collaborators.push(collaborator);
+  });
+
+  const ownerEntry = collaborators.find((collaborator) => collaborator.userId === project.ownerId);
+  if (!ownerEntry) {
+    collaborators.unshift({
+      userId: project.ownerId,
+      role: 'owner',
+      addedAt: project.createdAt,
+    });
+  } else if (ownerEntry.role !== 'owner') {
+    ownerEntry.role = 'owner';
+  }
+
+  const collaboratorIds = Array.from(new Set([project.ownerId, ...collaborators.map((collaborator) => collaborator.userId)]));
+
+  return {
+    ...project,
+    collaborators,
+    collaboratorIds,
+    updatedAt,
+  };
+}
+
 export function projectProgress(tree: WorkNode) {
   let total = 0;
   let done = 0;

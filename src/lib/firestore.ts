@@ -11,6 +11,7 @@ import {
     where,
     updateDoc
 } from 'firebase/firestore';
+import { normalizeProject } from './storage';
 import type { Project, AuthUser } from './storage';
 
 const PROJECTS_COLLECTION = 'projects';
@@ -105,10 +106,10 @@ export async function getUserProfiles(userIds: string[]): Promise<(AuthUser | nu
  * Saves a project to Firestore.
  */
 export async function saveProjectToFirestore(project: Project) {
+    const normalized = normalizeProject(project);
     const projectRef = doc(db, PROJECTS_COLLECTION, project.id);
     await setDoc(projectRef, {
-        ...project,
-        updatedAt: Date.now()
+        ...normalized,
     });
 }
 

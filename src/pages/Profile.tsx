@@ -1,10 +1,10 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { canViewProfile, projectProgress, saveDB, setSessionUserId, slugifyUsername, isValidUsername, uid } from '../lib/storage';
+import { canViewProfile, normalizeProject, projectProgress, saveDB, setSessionUserId, slugifyUsername, isValidUsername, uid } from '../lib/storage';
 import type { AppDB, Project, Visibility } from '../lib/storage';
 import { Card, Button, Input, Label, Pill } from '../components/ui';
 import { formatDate } from '../lib/utils';
 import { Eye, EyeOff, Handshake, LogOut, Plus, Search, Settings, Share2, Users } from 'lucide-react';
-import { getUserProfile, syncUserProfile, sendTeamUpRequest, isTeamedUp, hasPendingTeamUp, subscribeToTeamMembers, subscribeToUserProjects } from '../lib/firestore';
+import { getUserProfile, saveProjectToFirestore, syncUserProfile, sendTeamUpRequest, isTeamedUp, hasPendingTeamUp, subscribeToTeamMembers, subscribeToUserProjects } from '../lib/firestore';
 import type { AuthUser } from '../lib/storage';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useMemo, useState, useRef } from 'react';
@@ -294,7 +294,7 @@ export default function Profile({ db, onDB }: { db: AppDB; onDB: (next: AppDB) =
                     const projectId = uid('p');
                     const now = Date.now();
                     const rootId = uid('n');
-                    const next: Project = {
+                    const next = normalizeProject({
                       id: projectId,
                       ownerId: profile.id,
                       title: `New Project ${Object.keys(db.projects).length + 1}`,
@@ -314,10 +314,13 @@ export default function Profile({ db, onDB }: { db: AppDB; onDB: (next: AppDB) =
                         createdAt: now,
                         children: [],
                       },
-                    };
+                    });
                     const db2 = { ...db, projects: { ...db.projects, [projectId]: next } };
                     saveDB(db2);
                     onDB(db2);
+                    void saveProjectToFirestore(next).catch((err) => {
+                      console.error('Failed to save new project to Firestore:', err);
+                    });
                     navigate(`/p/${projectId}`);
                   }}
                 >

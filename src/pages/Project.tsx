@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { canViewProject, getSessionUserId, projectProgress, saveDB, uid } from '../lib/storage';
+import { canViewProject, getSessionUserId, normalizeProject, projectProgress, saveDB, uid } from '../lib/storage';
 import { UserSearchInput } from '../components/UserSearchInput';
 import { sendProjectInvite, getUserProfiles, subscribeToProjectInvites, saveProjectToFirestore, subscribeToProject, subscribeToSentRequests } from '../lib/firestore';
 import type { CollaborationRequest } from '../lib/firestore';
@@ -191,17 +191,14 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
     const p = db2.projects[project.id];
     if (p) {
       fn(p);
-      // Automatically keep collaboratorIds in sync with collaborators
-      p.collaboratorIds = p.collaborators.map(c => c.userId);
-      if (!p.collaboratorIds.includes(p.ownerId)) {
-        p.collaboratorIds.push(p.ownerId);
-      }
-
-      p.updatedAt = Date.now();
+      db2.projects[project.id] = normalizeProject(p);
+      const nextProject = db2.projects[project.id];
       saveDB(db2);
       onDB(db2);
       if (isOwner) {
-        saveProjectToFirestore(p);
+        void saveProjectToFirestore(nextProject).catch((err) => {
+          console.error('Failed to sync project to Firestore:', err);
+        });
       }
     }
   };
