@@ -87,7 +87,13 @@ export default function Home({ db }: { db: AppDB }) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <section className="min-h-[calc(100vh-72px)] w-full py-10 sm:py-14">
+      <section className="relative min-h-[calc(100vh-72px)] w-full py-10 sm:py-14">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-12 h-64 w-64 -translate-x-[140%] rounded-full bg-cyan-400/10 blur-3xl sm:h-80 sm:w-80" />
+          <div className="absolute right-1/2 top-24 h-72 w-72 translate-x-[150%] rounded-full bg-emerald-400/10 blur-3xl sm:h-96 sm:w-96" />
+          <div className="absolute inset-x-[12%] top-20 h-48 rounded-[3rem] border border-white/6 bg-linear-to-r from-white/[0.03] via-white/[0.01] to-white/[0.03] opacity-70 blur-2xl" />
+        </div>
+
         <div className="mx-auto flex min-h-[calc(100vh-72px-5rem)] w-full max-w-5xl flex-col items-center justify-center">
           <div className="text-center">
             <div className="mx-auto inline-flex items-center justify-center">
@@ -123,10 +129,26 @@ export default function Home({ db }: { db: AppDB }) {
             <Pill className="border-white/10 bg-white/7 text-white/80">{publicProjects.length} public projects to explore</Pill>
           </div>
 
+          <div className="mt-8 grid w-full max-w-4xl gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-4 backdrop-blur">
+              <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Identity layer</div>
+              <div className="mt-2 text-sm font-medium text-white/85">One profile anchor for everything you build.</div>
+            </div>
+            <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-4 backdrop-blur">
+              <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Tree logic</div>
+              <div className="mt-2 text-sm font-medium text-white/85">Projects stay readable as they branch and grow.</div>
+            </div>
+            <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-4 backdrop-blur">
+              <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Trusted sharing</div>
+              <div className="mt-2 text-sm font-medium text-white/85">Public when discoverable, private when collaboration matters.</div>
+            </div>
+          </div>
+
           {!me ? (
             <Card className="mx-auto mt-8 w-full max-w-4xl overflow-hidden p-5 sm:p-6">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(52,211,153,0.08),transparent_36%)]" />
               <div className="grid gap-5 lg:grid-cols-[1.3fr_0.9fr] lg:items-center">
-                <div>
+                <div className="relative">
                   <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
                     <Sparkles size={14} className="text-white/60" /> Start with identity, grow into collaboration
                   </div>
@@ -149,16 +171,16 @@ export default function Home({ db }: { db: AppDB }) {
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                <div className="relative grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4 backdrop-blur">
                     <div className="text-xs uppercase tracking-[0.22em] text-white/45">Identity</div>
                     <div className="mt-2 text-sm font-medium text-white/85">Permanent ID with optional username</div>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4 backdrop-blur">
                     <div className="text-xs uppercase tracking-[0.22em] text-white/45">Collaboration</div>
                     <div className="mt-2 text-sm font-medium text-white/85">Invite by ID instead of messy handoffs</div>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4 backdrop-blur">
                     <div className="text-xs uppercase tracking-[0.22em] text-white/45">Visibility</div>
                     <div className="mt-2 text-sm font-medium text-white/85">Track progress across the whole tree</div>
                   </div>
@@ -209,7 +231,11 @@ export default function Home({ db }: { db: AppDB }) {
               <div className="text-sm font-semibold text-white">Search profiles</div>
               <div className="mt-1 text-sm text-white/60">Find anyone by permanent ID or username.</div>
             </div>
-            <Card className="w-full p-2">
+            <Card className="overflow-hidden p-0">
+              <div className="border-b border-white/10 bg-linear-to-r from-white/[0.05] via-white/[0.02] to-white/[0.05] px-4 py-3 text-xs uppercase tracking-[0.24em] text-white/45">
+                Profile discovery
+              </div>
+              <div className="p-2">
               <form
                 className="flex items-center gap-2"
                 onSubmit={(e) => {
@@ -247,6 +273,7 @@ export default function Home({ db }: { db: AppDB }) {
                   View <ArrowRight size={16} />
                 </Button>
               </form>
+              </div>
             </Card>
 
             {open ? (
@@ -341,21 +368,21 @@ export default function Home({ db }: { db: AppDB }) {
             <Pill className="border-white/10 bg-white/5">Built for clear ownership</Pill>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="text-xs uppercase tracking-[0.22em] text-white/45">Step 1</div>
               <div className="mt-2 text-sm font-semibold text-white">Create your identity</div>
               <div className="mt-2 text-sm leading-6 text-white/70">
                 Sign in once to get a permanent ID, then claim a username if you want a cleaner public handle.
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="text-xs uppercase tracking-[0.22em] text-white/45">Step 2</div>
               <div className="mt-2 text-sm font-semibold text-white">Build projects as a tree</div>
               <div className="mt-2 text-sm leading-6 text-white/70">
                 Turn big ideas into roots, branches, stems, leaves, and fruits so the structure stays understandable.
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="text-xs uppercase tracking-[0.22em] text-white/45">Step 3</div>
               <div className="mt-2 text-sm font-semibold text-white">Collaborate and track progress</div>
               <div className="mt-2 text-sm leading-6 text-white/70">
@@ -373,7 +400,8 @@ export default function Home({ db }: { db: AppDB }) {
           <div className="mt-1 text-sm text-white/60">Create your identity, explore public work, and collaborate safely.</div>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-[1.4fr_0.8fr]">
-          <Card className="p-5 sm:p-6">
+          <Card className="relative overflow-hidden p-5 sm:p-6">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
             <div className="text-lg font-semibold text-white">Start building with a real identity</div>
             <div className="mt-2 max-w-2xl text-sm leading-6 text-white/70">
               Sign in or create your account, set up your profile, and begin building work trees that are easy to share, manage, and grow.
@@ -389,21 +417,22 @@ export default function Home({ db }: { db: AppDB }) {
               </Link>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur">
                 <div className="text-xs uppercase tracking-[0.2em] text-white/45">Profiles</div>
                 <div className="mt-2 text-sm text-white/80">Show your identity with an ID and optional username.</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur">
                 <div className="text-xs uppercase tracking-[0.2em] text-white/45">Projects</div>
                 <div className="mt-2 text-sm text-white/80">Shape complex work into a system people can follow.</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur">
                 <div className="text-xs uppercase tracking-[0.2em] text-white/45">Access</div>
                 <div className="mt-2 text-sm text-white/80">Keep work public when discoverable, private when trust matters.</div>
               </div>
             </div>
           </Card>
-          <Card className="p-5 sm:p-6">
+          <Card className="relative overflow-hidden p-5 sm:p-6">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
             <div className="text-sm font-semibold text-white">Privacy note</div>
             <div className="mt-2 text-sm leading-6 text-white/70">
               Private profiles and projects stay limited to the people who should see them. Public work stays discoverable without losing who owns
@@ -471,7 +500,8 @@ export default function Home({ db }: { db: AppDB }) {
             const ownerName = owner?.displayName ?? (owner ? owner.email.split('@')[0] : p.ownerId);
             return (
               <Link key={p.id} to={`/p/${p.id}`} className="block">
-                <Card className="h-full p-5 transition hover:-translate-y-0.5 hover:bg-white/7">
+                <Card className="group relative h-full overflow-hidden p-5 transition hover:-translate-y-0.5 hover:bg-white/7">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-white/[0.05] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="truncate text-base font-semibold text-white">{p.title}</div>
@@ -494,7 +524,7 @@ export default function Home({ db }: { db: AppDB }) {
                       </div>
                     </div>
                     <div className="mt-2 h-2 w-full overflow-hidden rounded-full border border-white/10 bg-black/20">
-                      <div className="h-full bg-white/40" style={{ width: `${prog.pct}%` }} />
+                      <div className="h-full bg-linear-to-r from-emerald-300/80 via-cyan-300/75 to-white/70" style={{ width: `${prog.pct}%` }} />
                     </div>
                   </div>
                 </Card>
