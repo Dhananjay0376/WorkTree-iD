@@ -3,17 +3,23 @@ import { ArrowRight, BadgeCheck, Compass, Plus, Search, Shield, Sparkles, TreePi
 import { Card, Button, Input, Pill } from '../components/ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getSessionUserId, getUserByUsernameOrId, projectProgress } from '../lib/storage';
-import type { AppDB } from '../lib/storage';
+import type { AppDB, AuthUser, Project } from '../lib/storage';
 import { addRecentSearch, clearRecentSearches, loadRecentSearches } from '../lib/recent';
 import { formatDate } from '../lib/utils';
+import { getHomeSnapshot } from '../lib/firestore';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Home({ db }: { db: AppDB }) {
+  const { currentUser } = useAuth();
   const viewerId = getSessionUserId();
   const me = viewerId ? db.users[viewerId] : null;
   const navigate = useNavigate();
   const [q, setQ] = useState('');
   const [recent, setRecent] = useState<string[]>(() => loadRecentSearches());
   const [open, setOpen] = useState(false);
+  const [remoteTotals, setRemoteTotals] = useState<{ totalUsers: number; totalProjects: number } | null>(null);
+  const [remotePublicProjects, setRemotePublicProjects] = useState<Project[]>([]);
+  const [remoteUsersById, setRemoteUsersById] = useState<Record<string, AuthUser>>({});
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   const meName = me?.displayName ?? (me ? me.email.split('@')[0] : '');
@@ -53,15 +59,44 @@ export default function Home({ db }: { db: AppDB }) {
       .map((x) => ({ id: x.id, label: x.label }));
   }, [db.users, q]);
 
-  const publicProjects = useMemo(() => {
+  const publicProjectsFallback = useMemo(() => {
     return Object.values(db.projects)
       .filter((p) => p.visibility === 'public')
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .slice(0, 6);
   }, [db.projects]);
 
-  const totalUsers = useMemo(() => Object.keys(db.users).length, [db.users]);
-  const totalProjects = useMemo(() => Object.keys(db.projects).length, [db.projects]);
+  const totalUsersFallback = useMemo(() => Object.keys(db.users).length, [db.users]);
+  const totalProjectsFallback = useMemo(() => Object.keys(db.projects).length, [db.projects]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!currentUser) return () => { cancelled = true; };
+
+    void getHomeSnapshot()
+      .then((snapshot) => {
+        if (cancelled) return;
+        setRemoteTotals({
+          totalUsers: snapshot.totalUsers,
+          totalProjects: snapshot.totalProjects,
+        });
+        setRemotePublicProjects(snapshot.publicProjects);
+        setRemoteUsersById(snapshot.usersById);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('Failed to load shared home stats:', err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser]);
+
+  const totalUsers = currentUser && remoteTotals ? remoteTotals.totalUsers : totalUsersFallback;
+  const totalProjects = currentUser && remoteTotals ? remoteTotals.totalProjects : totalProjectsFallback;
+  const publicProjects = currentUser && remotePublicProjects.length > 0 ? remotePublicProjects : publicProjectsFallback;
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -532,7 +567,7 @@ export default function Home({ db }: { db: AppDB }) {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {publicProjects.map((p) => {
-            const owner = db.users[p.ownerId];
+            const owner = remoteUsersById[p.ownerId] ?? db.users[p.ownerId];
             const prog = projectProgress(p.tree);
             const ownerName = owner?.displayName ?? (owner ? owner.email.split('@')[0] : p.ownerId);
             return (

@@ -217,7 +217,32 @@ export async function searchUsersByUsername(usernameQuery: string): Promise<Auth
 export async function getPublicProjects(): Promise<Project[]> {
     const q = query(collection(db, PROJECTS_COLLECTION), where("visibility", "==", "public"));
     const snap = await getDocs(q);
-    return snap.docs.map(d => d.data() as Project);
+    return snap.docs.map(d => normalizeProject(d.data() as Project));
+}
+
+export async function getHomeSnapshot(): Promise<{
+    totalUsers: number;
+    totalProjects: number;
+    publicProjects: Project[];
+    usersById: Record<string, AuthUser>;
+}> {
+    const [usersSnap, projectsSnap] = await Promise.all([
+        getDocs(collection(db, USERS_COLLECTION)),
+        getDocs(collection(db, PROJECTS_COLLECTION)),
+    ]);
+
+    const users = usersSnap.docs.map((docSnap) => docSnap.data() as AuthUser);
+    const projects = projectsSnap.docs.map((docSnap) => normalizeProject(docSnap.data() as Project));
+
+    return {
+        totalUsers: users.length,
+        totalProjects: projects.length,
+        publicProjects: projects
+            .filter((project) => project.visibility === 'public')
+            .sort((a, b) => b.updatedAt - a.updatedAt)
+            .slice(0, 6),
+        usersById: Object.fromEntries(users.map((user) => [user.id, user])),
+    };
 }
 
 /**
