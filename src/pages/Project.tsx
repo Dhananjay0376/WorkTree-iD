@@ -95,25 +95,16 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
     // when the *set* of IDs changes, not when the array reference changes.
   }, [project?.id, project?.collaborators.map(c => c.userId).join(',')]);
 
-  // Listen for real-time pending invites for this project
   useEffect(() => {
     if (!project || !isOwner) return;
     const unsubscribe = subscribeToProjectInvites(project.id, (reqs) => {
       setPendingReqs(reqs);
-
-      // PROJECT HANDSHAKE: if a request is accepted but user isn't in collaborators yet
-      // (Requires modifying subscribeToProjectInvites to include accepted or adding a new listener)
     });
     return () => { setTimeout(() => unsubscribe(), 0); };
   }, [project?.id, isOwner]);
 
-  // Handle invitation handshakes (Owner side)
   useEffect(() => {
     if (!project || !isOwner || !viewerId) return;
-
-    // We reuse subscribeToRequests because it already includes 'accepted' for the recipient, 
-    // but here we need to listen for when OUR SENT invites are accepted.
-    // Let's add subscribeToProjectInvites variant or check sent requests.
     const unsubscribe = subscribeToSentRequests(viewerId, (sent) => {
       if (!isMounted.current) return;
       const currentProject = dbRef.current.projects[project.id];
@@ -139,11 +130,14 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
           if (!p.collaboratorIds.includes(inv.toUserId)) {
             p.collaboratorIds.push(inv.toUserId);
           }
+          p.invited = p.invited.filter((userId) => userId !== inv.toUserId);
         });
-        p.updatedAt = Date.now();
+        db2.projects[currentProject.id] = normalizeProject(p);
         onDB(db2);
         saveDB(db2);
-        saveProjectToFirestore(p);
+        void saveProjectToFirestore(db2.projects[currentProject.id]).catch((err) => {
+          console.error('Failed to sync accepted invites:', err);
+        });
       }
     });
     return () => { setTimeout(() => unsubscribe(), 0); };
@@ -430,7 +424,7 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
               })}
             </div>
 
-            {canEdit ? (
+            {isOwner ? (
               <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
                 <div className="text-sm font-semibold text-white">Invite collaborator</div>
                 <div className="mt-2 flex items-center gap-2">
@@ -453,6 +447,10 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
 
                       if (project.collaborators.some((x) => x.userId === user.id)) {
                         setInviteErr('Already a collaborator.');
+                        return;
+                      }
+                      if (pendingReqs.some((request) => request.toUserId === user.id && request.status === 'pending')) {
+                        setInviteErr('Invite already pending for this user.');
                         return;
                       }
 
