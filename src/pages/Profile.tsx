@@ -162,7 +162,7 @@ export default function Profile({ db, onDB }: { db: AppDB; onDB: (next: AppDB) =
             <EyeOff size={18} />
             <div className="text-lg font-semibold">This profile is private</div>
           </div>
-          <div className="mt-2 text-white/70">Only the owner can view it in this demo.</div>
+          <div className="mt-2 text-white/70">Only the profile owner can view it.</div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link to="/auth">
               <Button>Sign in</Button>
@@ -296,7 +296,7 @@ export default function Profile({ db, onDB }: { db: AppDB; onDB: (next: AppDB) =
                       id: projectId,
                       ownerId: profile.id,
                       title: `New Project ${Object.keys(db.projects).length + 1}`,
-                      description: 'Describe your project…',
+                      description: 'Describe your project.',
                       visibility: 'private',
                       collaborators: [{ userId: profile.id, role: 'owner', addedAt: now }],
                       collaboratorIds: [profile.id],

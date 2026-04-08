@@ -105,7 +105,7 @@ export function ensureSeed(db: AppDB) {
     id: uid('p'),
     ownerId: aliceId,
     title: 'Public Roadmap',
-    description: 'A demo public project anyone can view and request to join.',
+    description: 'A public project anyone can view and request to join.',
     visibility: 'public',
     collaborators: [
       { userId: aliceId, role: 'owner', addedAt: now - 1000 * 60 * 60 * 24 },

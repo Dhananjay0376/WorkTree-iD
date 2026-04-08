@@ -481,13 +481,20 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
                   onClick={() => {
                     const cloneId = uid('p');
                     const now = Date.now();
-                    const copy: Project = structuredClone(project);
-                    copy.id = cloneId;
-                    copy.title = `${project.title} (copy)`;
-                    copy.createdAt = now;
-                    copy.updatedAt = now;
-                    copy.visibility = 'private';
-                    updateProject(() => { });
+                    const ownerId = viewerId ?? project.ownerId;
+                    const copy = normalizeProject({
+                      ...structuredClone(project),
+                      id: cloneId,
+                      ownerId,
+                      title: `${project.title} (copy)`,
+                      visibility: 'private',
+                      collaborators: [{ userId: ownerId, role: 'owner', addedAt: now }],
+                      collaboratorIds: [ownerId],
+                      editorIds: [],
+                      invited: [],
+                      createdAt: now,
+                      updatedAt: now,
+                    });
                     const db2: AppDB = structuredClone(db);
                     db2.projects[cloneId] = copy;
                     saveDB(db2);
