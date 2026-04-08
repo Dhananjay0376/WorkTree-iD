@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, X } from 'lucide-react';
 import { Button } from './ui';
 import type { CollaborationRequest } from '../lib/firestore';
-import { subscribeToRequests, respondToRequest, acceptTeamUp, subscribeToSentRequests, finalizeTeamUp, markNotificationsAsSeen, getUserProfile } from '../lib/firestore';
+import { subscribeToRequests, respondToRequest, acceptTeamUp, markNotificationsAsSeen, getUserProfile } from '../lib/firestore';
 import { formatDate } from '../lib/utils';
 
 export function NotificationBell({ userId }: { userId: string | null }) {
@@ -14,7 +14,6 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     useEffect(() => {
         let mounted = true;
         let unsubscribe: (() => void) | undefined;
-        let unsubscribeSent: (() => void) | undefined;
 
         if (!userId) {
             setRequests([]);
@@ -30,21 +29,12 @@ export function NotificationBell({ userId }: { userId: string | null }) {
         unsubscribe = subscribeToRequests(userId, (reqs) => {
             if (mounted) setRequests(reqs);
         });
-        unsubscribeSent = subscribeToSentRequests(userId, (sent) => {
-            if (!mounted) return;
-            sent.forEach(req => {
-                if (req.type === 'team_up' && req.status === 'accepted') {
-                    finalizeTeamUp(req.fromUserId, req.toUserId);
-                }
-            });
-        });
 
         return () => {
             mounted = false;
             // Delay unsubscribe to avoid Firestore b815 assertion error during React unmount
             setTimeout(() => {
                 if (unsubscribe) unsubscribe();
-                if (unsubscribeSent) unsubscribeSent();
             }, 0);
         };
     }, [userId]);
@@ -72,7 +62,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
         setRequests(prev => prev.filter(r => r.id !== req.id));
 
         if (status === 'accepted' && req.type === 'team_up') {
-            await acceptTeamUp(req.id, req.fromUserId, req.toUserId);
+            await acceptTeamUp(req.id);
         } else {
             await respondToRequest(req.id, status);
         }

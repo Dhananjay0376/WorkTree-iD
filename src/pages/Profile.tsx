@@ -21,8 +21,8 @@ export default function Profile({ db, onDB }: { db: AppDB; onDB: (next: AppDB) =
   const [user, setUser] = useState(localUser);
   const [loading, setLoading] = useState(!localUser);
 
-  // Sync/Fetch effect
-  useMemo(() => {
+  // Keep the displayed profile aligned with the latest local cache.
+  useEffect(() => {
     if (localUser) {
       setUser(localUser);
       setLoading(false);
@@ -62,7 +62,6 @@ export default function Profile({ db, onDB }: { db: AppDB; onDB: (next: AppDB) =
   const [teamMembers, setTeamMembers] = useState<AuthUser[]>([]);
   const [teamLoading, setTeamLoading] = useState(false);
 
-  // Check team-up status with this profile
   useEffect(() => {
     if (!viewerId || !profile || isOwner) return;
     (async () => {
@@ -73,7 +72,6 @@ export default function Profile({ db, onDB }: { db: AppDB; onDB: (next: AppDB) =
     })();
   }, [viewerId, profile?.id]);
 
-  // Listen for real-time team updates
   useEffect(() => {
     if (!profile) return;
     const unsubscribe = subscribeToTeamMembers(profile.id, setTeamMembers);

@@ -189,12 +189,8 @@ export async function respondToRequest(requestId: string, status: 'accepted' | '
     await updateDoc(ref, { status });
 }
 
-export async function acceptTeamUp(requestId: string, _fromUserId: string, _toUserId: string) {
+export async function acceptTeamUp(requestId: string) {
     await respondToRequest(requestId, 'accepted');
-}
-
-export async function finalizeTeamUp(_fromUserId: string, _toUserId: string) {
-    // Placeholder
 }
 
 export async function markNotificationsAsSeen(userId: string) {
