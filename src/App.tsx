@@ -143,11 +143,7 @@ function Footer() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <div className="border-t border-white/10 pt-6 text-xs text-white/50">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            Demo build: data is stored in your browser (localStorage). For production, add a backend (Postgres), real auth, and server-side
-            search.
-          </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
           <div className="flex items-center gap-4">
             <Link to="/about" className="text-white/60 hover:text-white">
               About

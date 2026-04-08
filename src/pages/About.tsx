@@ -124,7 +124,7 @@ export default function About() {
 
       <div className="mt-8">
         <Card className="relative overflow-hidden p-6 sm:p-8">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/35 to-transparent" />
           <div className="absolute -left-20 top-0 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
           <div className="absolute -right-20 bottom-0 h-56 w-56 rounded-full bg-sky-400/10 blur-3xl" />
           <div className="relative grid gap-6 lg:grid-cols-[1.5fr_0.9fr] lg:items-start">
@@ -158,8 +158,8 @@ export default function About() {
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           {owners.map((owner) => (
             <Card key={owner.name} className="group relative overflow-hidden p-6">
-              <div className={`absolute inset-0 bg-gradient-to-br ${owner.accent} opacity-80 transition-opacity duration-300 group-hover:opacity-100`} />
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+              <div className={`absolute inset-0 bg-linear-to-br ${owner.accent} opacity-80 transition-opacity duration-300 group-hover:opacity-100`} />
+              <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/30 to-transparent" />
               <div className="relative">
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-4">
@@ -172,7 +172,7 @@ export default function About() {
                       <div className="mt-1 text-sm text-white/60">{owner.focus}</div>
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-right sm:min-w-[10.5rem]">
+                  <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-right sm:min-w-42">
                     <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Ownership</div>
                     <div className="mt-1 whitespace-nowrap text-sm font-medium text-white/85">Vision to execution</div>
                   </div>

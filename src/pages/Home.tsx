@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Compass, Plus, Search, Shield, TreePine, Users, X } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Compass, Plus, Search, Shield, Sparkles, TreePine, Users, X } from 'lucide-react';
 import { Card, Button, Input, Pill } from '../components/ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getSessionUserId, getUserByUsernameOrId, projectProgress } from '../lib/storage';
@@ -60,6 +60,9 @@ export default function Home({ db }: { db: AppDB }) {
       .slice(0, 6);
   }, [db.projects]);
 
+  const totalUsers = useMemo(() => Object.keys(db.users).length, [db.users]);
+  const totalProjects = useMemo(() => Object.keys(db.projects).length, [db.projects]);
+
   useEffect(() => {
     setRecent(loadRecentSearches());
   }, []);
@@ -84,14 +87,13 @@ export default function Home({ db }: { db: AppDB }) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      {/* Hero + search (full viewport section) */}
       <section className="min-h-[calc(100vh-72px)] w-full py-10 sm:py-14">
         <div className="mx-auto flex min-h-[calc(100vh-72px-5rem)] w-full max-w-5xl flex-col items-center justify-center">
           <div className="text-center">
             <div className="mx-auto inline-flex items-center justify-center">
               <span className="relative text-5xl font-semibold tracking-tight sm:text-6xl">
-                <span className="absolute inset-0 bg-gradient-to-r from-indigo-400/35 via-emerald-300/25 to-pink-400/25 blur-2xl" />
-                <span className="relative bg-gradient-to-r from-indigo-200 via-white to-emerald-200 bg-clip-text text-transparent drop-shadow-[0_10px_30px_rgba(0,0,0,0.55)]">
+                <span className="absolute inset-0 bg-linear-to-r from-indigo-400/35 via-emerald-300/25 to-pink-400/25 blur-2xl" />
+                <span className="relative bg-linear-to-r from-indigo-200 via-white to-emerald-200 bg-clip-text text-transparent drop-shadow-[0_10px_30px_rgba(0,0,0,0.55)]">
                   WorkTree ID
                 </span>
                 <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl opacity-70">
@@ -104,13 +106,66 @@ export default function Home({ db }: { db: AppDB }) {
 
           <div className="mt-10 w-full max-w-3xl text-center">
             <h1 className="text-center text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              WorkTree ID — build projects as a tree, solo or with friends.
+              Build structured projects with people you trust.
             </h1>
-            <p className="mx-auto mt-4 max-w-3xl text-pretty text-lg text-white/70">
-              Each user gets a unique permanent ID and an optional unique username. Create public or private profiles, then build projects and
-              nested tasks from roots to fruits.
+            <p className="mx-auto mt-4 max-w-3xl text-pretty text-lg leading-8 text-white/70">
+              Create a lasting identity, shape work from roots to fruits, and invite collaborators into a system that keeps ownership and
+              progress clear as ideas grow.
             </p>
           </div>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Pill className="border-emerald-400/20 bg-emerald-400/10 text-emerald-100">
+              <Sparkles size={14} /> Structured collaboration
+            </Pill>
+            <Pill className="border-white/10 bg-white/7 text-white/80">{totalUsers} identities created</Pill>
+            <Pill className="border-white/10 bg-white/7 text-white/80">{totalProjects} projects growing</Pill>
+            <Pill className="border-white/10 bg-white/7 text-white/80">{publicProjects.length} public projects to explore</Pill>
+          </div>
+
+          {!me ? (
+            <Card className="mx-auto mt-8 w-full max-w-4xl overflow-hidden p-5 sm:p-6">
+              <div className="grid gap-5 lg:grid-cols-[1.3fr_0.9fr] lg:items-center">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+                    <Sparkles size={14} className="text-white/60" /> Start with identity, grow into collaboration
+                  </div>
+                  <div className="mt-4 text-2xl font-semibold text-white sm:text-3xl">A cleaner home for serious collaborative work.</div>
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-white/68 sm:text-base">
+                    Sign in with Firebase, create your profile, and build public or private work trees that make ownership, progress, and trust
+                    visible from day one.
+                  </p>
+                  <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <Link to="/auth">
+                      <Button className="w-full sm:w-auto">
+                        Sign in / Sign up <ArrowRight size={16} />
+                      </Button>
+                    </Link>
+                    <Link to="/explore">
+                      <Button variant="secondary" className="w-full sm:w-auto">
+                        <Compass size={16} /> Explore public projects
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="text-xs uppercase tracking-[0.22em] text-white/45">Identity</div>
+                    <div className="mt-2 text-sm font-medium text-white/85">Permanent ID with optional username</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="text-xs uppercase tracking-[0.22em] text-white/45">Collaboration</div>
+                    <div className="mt-2 text-sm font-medium text-white/85">Invite by ID instead of messy handoffs</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="text-xs uppercase tracking-[0.22em] text-white/45">Visibility</div>
+                    <div className="mt-2 text-sm font-medium text-white/85">Track progress across the whole tree</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ) : null}
 
           {me ? (
             <Card className="mx-auto mt-10 w-full max-w-3xl p-5">
@@ -220,7 +275,7 @@ export default function Home({ db }: { db: AppDB }) {
                         ))}
                       </div>
                     ) : (
-                      <div className="px-2 pb-1 text-sm text-white/60">No users found. Try a different ID/username.</div>
+                      <div className="px-2 pb-1 text-sm text-white/60">No users found. Try a different ID or username.</div>
                     )}
                   </div>
                 ) : (
@@ -260,7 +315,7 @@ export default function Home({ db }: { db: AppDB }) {
                     ) : (
                       <div className="px-2 pb-1 text-sm text-white/60">Search by permanent ID or username.</div>
                     )}
-                    <div className="mt-2 px-2 text-xs text-white/50">Tip: try • @alice • bob • or a full user ID.</div>
+                    <div className="mt-2 px-2 text-xs text-white/50">Tip: try @alice, bob, or a full user ID.</div>
                   </div>
                 )}
               </Card>
@@ -275,80 +330,97 @@ export default function Home({ db }: { db: AppDB }) {
         </div>
       </section>
 
-      {/* How it works */}
       <section id="how-it-works" className="mt-12 scroll-mt-24">
-        <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <Card className="p-6">
-          <div className="text-sm font-semibold text-white">How it works</div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-              <div className="text-sm font-semibold text-white">1) Create your identity</div>
-              <div className="mt-1 text-sm text-white/70">Authenticate once to get a permanent ID and optional username.</div>
+        <div className="mb-6 h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent" />
+        <Card className="overflow-hidden p-6 sm:p-7">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="text-sm font-semibold text-white">How it works</div>
+              <div className="mt-1 text-sm text-white/60">A simple flow for building, sharing, and growing structured work.</div>
             </div>
-            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-              <div className="text-sm font-semibold text-white">2) Build projects as a tree</div>
-              <div className="mt-1 text-sm text-white/70">Break work into roots • branches • stems • leaves • fruits.</div>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-              <div className="text-sm font-semibold text-white">3) Collaborate + track progress</div>
-              <div className="mt-1 text-sm text-white/70">Invite friends by ID/username and mark nodes done to see progress.</div>
-            </div>
+            <Pill className="border-white/10 bg-white/5">Built for clear ownership</Pill>
           </div>
-          <div className="mt-5 rounded-xl border border-white/10 bg-black/30 p-4">
-            <div className="text-xs text-white/60">Demo accounts (local-only)</div>
-            <div className="mt-2 grid gap-2 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-white/80">alice@example.com</div>
-                <div className="text-white/50">password: anything</div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+              <div className="text-xs uppercase tracking-[0.22em] text-white/45">Step 1</div>
+              <div className="mt-2 text-sm font-semibold text-white">Create your identity</div>
+              <div className="mt-2 text-sm leading-6 text-white/70">
+                Sign in once to get a permanent ID, then claim a username if you want a cleaner public handle.
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-white/80">bob@example.com</div>
-                <div className="text-white/50">password: anything</div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+              <div className="text-xs uppercase tracking-[0.22em] text-white/45">Step 2</div>
+              <div className="mt-2 text-sm font-semibold text-white">Build projects as a tree</div>
+              <div className="mt-2 text-sm leading-6 text-white/70">
+                Turn big ideas into roots, branches, stems, leaves, and fruits so the structure stays understandable.
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+              <div className="text-xs uppercase tracking-[0.22em] text-white/45">Step 3</div>
+              <div className="mt-2 text-sm font-semibold text-white">Collaborate and track progress</div>
+              <div className="mt-2 text-sm leading-6 text-white/70">
+                Invite collaborators by ID or username, keep access intentional, and watch progress move across the tree.
               </div>
             </div>
           </div>
         </Card>
       </section>
 
-      {/* Get started */}
       <section className="mt-14">
-        <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="mb-6 h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent" />
         <div>
           <div className="text-sm font-semibold text-white">Get started</div>
           <div className="mt-1 text-sm text-white/60">Create your identity, explore public work, and collaborate safely.</div>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <Card className="p-4">
-            <div className="text-sm font-semibold text-white">Start building</div>
-            <div className="mt-1 text-sm text-white/70">Create your identity to save projects and invite collaborators.</div>
-            <div className="mt-3">
-              <Link to="/auth">
-                <Button className="w-full">Sign in / Create account</Button>
-              </Link>
+        <div className="mt-4 grid gap-3 lg:grid-cols-[1.4fr_0.8fr]">
+          <Card className="p-5 sm:p-6">
+            <div className="text-lg font-semibold text-white">Start building with a real identity</div>
+            <div className="mt-2 max-w-2xl text-sm leading-6 text-white/70">
+              Sign in or create your account, set up your profile, and begin building work trees that are easy to share, manage, and grow.
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm font-semibold text-white">Explore</div>
-            <div className="mt-1 text-sm text-white/70">Browse public projects and join via link.</div>
-            <div className="mt-3">
-              <Link to="/explore">
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <Link to="/auth" className="sm:flex-1">
+                <Button className="w-full">Sign in / Sign up</Button>
+              </Link>
+              <Link to="/explore" className="sm:flex-1">
                 <Button variant="secondary" className="w-full">
                   <Compass size={16} /> Explore public projects
                 </Button>
               </Link>
             </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="text-xs uppercase tracking-[0.2em] text-white/45">Profiles</div>
+                <div className="mt-2 text-sm text-white/80">Show your identity with an ID and optional username.</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="text-xs uppercase tracking-[0.2em] text-white/45">Projects</div>
+                <div className="mt-2 text-sm text-white/80">Shape complex work into a system people can follow.</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="text-xs uppercase tracking-[0.2em] text-white/45">Access</div>
+                <div className="mt-2 text-sm text-white/80">Keep work public when discoverable, private when trust matters.</div>
+              </div>
+            </div>
           </Card>
-          <Card className="p-4">
+          <Card className="p-5 sm:p-6">
             <div className="text-sm font-semibold text-white">Privacy note</div>
-            <div className="mt-1 text-sm text-white/70">Private content is limited to you and collaborators.</div>
-            <div className="mt-3 text-xs text-white/50">Public projects can be shared and joined responsibly.</div>
+            <div className="mt-2 text-sm leading-6 text-white/70">
+              Private profiles and projects stay limited to the people who should see them. Public work stays discoverable without losing who owns
+              it.
+            </div>
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="text-xs uppercase tracking-[0.2em] text-white/45">Best for</div>
+              <div className="mt-2 text-sm text-white/80">
+                Founders, collaborators, student teams, and anyone who wants progress to stay visible.
+              </div>
+            </div>
           </Card>
         </div>
       </section>
 
-      {/* Why */}
       <section className="mt-14">
-        <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="mb-6 h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent" />
         <div>
           <div className="text-sm font-semibold text-white">Why WorkTree ID</div>
           <div className="mt-1 text-sm text-white/60">Designed for privacy, collaboration, and structured progress.</div>
@@ -366,21 +438,20 @@ export default function Home({ db }: { db: AppDB }) {
               <Users size={18} />
               <div className="font-semibold">Collaborate</div>
             </div>
-            <div className="mt-2 text-sm text-white/70">Invite friends using their ID/username. Track progress together.</div>
+            <div className="mt-2 text-sm text-white/70">Invite collaborators using their ID or username. Track progress together.</div>
           </Card>
           <Card className="p-4">
             <div className="flex items-center gap-2 text-white">
               <TreePine size={18} />
               <div className="font-semibold">Work Trees</div>
             </div>
-            <div className="mt-2 text-sm text-white/70">Break work into roots → branches → stems → leaves → fruits.</div>
+            <div className="mt-2 text-sm text-white/70">Break work into roots, branches, stems, leaves, and fruits.</div>
           </Card>
         </div>
       </section>
 
-      {/* Public projects */}
       <section className="mt-14">
-        <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="mb-6 h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent" />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="text-xl font-semibold text-white">Public projects</div>
@@ -400,7 +471,7 @@ export default function Home({ db }: { db: AppDB }) {
             const ownerName = owner?.displayName ?? (owner ? owner.email.split('@')[0] : p.ownerId);
             return (
               <Link key={p.id} to={`/p/${p.id}`} className="block">
-                <Card className="h-full p-5 hover:bg-white/7">
+                <Card className="h-full p-5 transition hover:-translate-y-0.5 hover:bg-white/7">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="truncate text-base font-semibold text-white">{p.title}</div>
