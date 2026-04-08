@@ -391,6 +391,47 @@ export default function Home({ db }: { db: AppDB }) {
 
       <section className="mt-20 sm:mt-24">
         <div className="mb-8 h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent" />
+        <Card className="relative overflow-hidden p-7 sm:p-9">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.08),transparent_30%)]" />
+          <div className="relative grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+            <div>
+              <Pill className="border-white/10 bg-white/5">About WorkTree ID</Pill>
+              <div className="mt-4 max-w-2xl text-2xl font-semibold text-white sm:text-3xl">
+                Learn the story, mission, and people shaping WorkTree ID.
+              </div>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/70 sm:text-base">
+                If the product feels intentional, the About page shows why. Meet the founders, understand the mission, and see the principles
+                behind identity, collaboration, and privacy in WorkTree ID.
+              </p>
+              <div className="mt-6">
+                <Link to="/about">
+                  <Button>
+                    Explore About page <ArrowRight size={16} />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5 backdrop-blur">
+                <div className="text-xs uppercase tracking-[0.22em] text-white/45">Founders</div>
+                <div className="mt-2 text-sm text-white/80">See who is building WorkTree ID and what they own.</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5 backdrop-blur">
+                <div className="text-xs uppercase tracking-[0.22em] text-white/45">Mission</div>
+                <div className="mt-2 text-sm text-white/80">Read the product vision behind structured collaborative work.</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5 backdrop-blur">
+                <div className="text-xs uppercase tracking-[0.22em] text-white/45">Values</div>
+                <div className="mt-2 text-sm text-white/80">Understand the privacy-first and clarity-first principles guiding the platform.</div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      <section className="mt-20 sm:mt-24">
+        <div className="mb-8 h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent" />
         <div>
           <div className="text-sm font-semibold text-white">Get started</div>
           <div className="mt-1 text-sm text-white/60">Create your identity, explore public work, and collaborate safely.</div>
