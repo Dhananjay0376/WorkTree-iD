@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, Button, Pill } from '../components/ui';
 import { ArrowUpRight, Github, Globe, Linkedin, Mail, ShieldCheck, Sparkles, TreePine, Users, X } from 'lucide-react';
+import { useEffect } from 'react';
 
 type Owner = {
   name: string;
@@ -55,6 +56,10 @@ function iconFor(kind: Owner['links'][number]['icon']) {
 }
 
 export default function About() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
