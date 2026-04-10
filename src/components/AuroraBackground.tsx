@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -15,16 +15,37 @@ function usePrefersReducedMotion() {
 export default function AuroraBackground() {
   const reduced = usePrefersReducedMotion();
   const [pos, setPos] = useState({ x: 50, y: 35 });
+  const frameRef = useRef<number | null>(null);
+  const nextPosRef = useRef(pos);
 
   useEffect(() => {
     if (reduced) return;
     const onMove = (e: PointerEvent) => {
-      const x = (e.clientX / window.innerWidth) * 100;
-      const y = (e.clientY / window.innerHeight) * 100;
-      setPos({ x, y });
+      nextPosRef.current = {
+        x: (e.clientX / window.innerWidth) * 100,
+        y: (e.clientY / window.innerHeight) * 100,
+      };
+
+      if (frameRef.current !== null) return;
+      frameRef.current = window.requestAnimationFrame(() => {
+        frameRef.current = null;
+        setPos((current) => {
+          const next = nextPosRef.current;
+          if (Math.abs(current.x - next.x) < 0.1 && Math.abs(current.y - next.y) < 0.1) {
+            return current;
+          }
+          return next;
+        });
+      });
     };
     window.addEventListener('pointermove', onMove, { passive: true });
-    return () => window.removeEventListener('pointermove', onMove);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+    };
   }, [reduced]);
 
   const style = useMemo(() => {

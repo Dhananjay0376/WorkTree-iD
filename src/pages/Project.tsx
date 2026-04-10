@@ -168,6 +168,72 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
     return () => { setTimeout(() => unsubscribe(), 0); };
   }, [project?.id, isOwner, viewerId]);
 
+  const owner = project ? db.users[project.ownerId] : null;
+  const ownerName = project
+    ? owner?.username ? `@${owner.username}` : owner?.displayName ?? project.ownerId.slice(0, 8)
+    : '';
+
+  const updateProject = (fn: (p: Project) => void) => {
+    if (!project) return;
+    const db2: AppDB = structuredClone(db);
+    const p = db2.projects[project.id];
+    if (p) {
+      fn(p);
+      db2.projects[project.id] = normalizeProject(p);
+      const nextProject = db2.projects[project.id];
+      saveDB(db2);
+      onDB(db2);
+      if (canEdit) {
+        void saveProjectToFirestore(nextProject).catch((err) => {
+          console.error('Failed to sync project to Firestore:', err);
+        });
+      }
+    }
+  };
+
+  const pushTree = (nextTree: Project['tree']) => {
+    if (!project) return;
+    setTreeHistory((h) => historyPush(h, nextTree));
+    updateProject((p) => (p.tree = nextTree));
+  };
+
+  const doUndo = () => {
+    setTreeHistory((h) => {
+      const next = historyUndo(h);
+      updateProject((p) => (p.tree = next.present));
+      return next;
+    });
+  };
+
+  const doRedo = () => {
+    setTreeHistory((h) => {
+      const next = historyRedo(h);
+      updateProject((p) => (p.tree = next.present));
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!project || !canEdit) return;
+      const key = e.key.toLowerCase();
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+
+      // Undo/redo
+      if (key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        if (historyCanUndo(treeHistory)) doUndo();
+      }
+      if ((key === 'y') || (key === 'z' && e.shiftKey)) {
+        e.preventDefault();
+        if (historyCanRedo(treeHistory)) doRedo();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [canEdit, project, treeHistory]);
+
   if (!project && isHydratingProject) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -212,68 +278,6 @@ export default function ProjectPage({ db, onDB }: { db: AppDB; onDB: (next: AppD
       </div>
     );
   }
-
-  const owner = db.users[project.ownerId];
-  const ownerName = owner?.username ? `@${owner.username}` : owner?.displayName ?? project.ownerId.slice(0, 8);
-
-  const updateProject = (fn: (p: Project) => void) => {
-    const db2: AppDB = structuredClone(db);
-    const p = db2.projects[project.id];
-    if (p) {
-      fn(p);
-      db2.projects[project.id] = normalizeProject(p);
-      const nextProject = db2.projects[project.id];
-      saveDB(db2);
-      onDB(db2);
-      if (canEdit) {
-        void saveProjectToFirestore(nextProject).catch((err) => {
-          console.error('Failed to sync project to Firestore:', err);
-        });
-      }
-    }
-  };
-
-  const pushTree = (nextTree: Project['tree']) => {
-    setTreeHistory((h) => historyPush(h, nextTree));
-    updateProject((p) => (p.tree = nextTree));
-  };
-
-  const doUndo = () => {
-    setTreeHistory((h) => {
-      const next = historyUndo(h);
-      updateProject((p) => (p.tree = next.present));
-      return next;
-    });
-  };
-
-  const doRedo = () => {
-    setTreeHistory((h) => {
-      const next = historyRedo(h);
-      updateProject((p) => (p.tree = next.present));
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!canEdit) return;
-      const key = e.key.toLowerCase();
-      const mod = e.metaKey || e.ctrlKey;
-      if (!mod) return;
-
-      // Undo/redo
-      if (key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        if (historyCanUndo(treeHistory)) doUndo();
-      }
-      if ((key === 'y') || (key === 'z' && e.shiftKey)) {
-        e.preventDefault();
-        if (historyCanRedo(treeHistory)) doRedo();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [canEdit, treeHistory]);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
