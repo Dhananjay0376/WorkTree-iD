@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, Button, Pill } from '../components/ui';
 import { ArrowUpRight, Github, Globe, Linkedin, Mail, ShieldCheck, Sparkles, TreePine, Users, X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
 type Owner = {
   name: string;
@@ -56,7 +56,8 @@ function iconFor(kind: Owner['links'][number]['icon']) {
 }
 
 export default function About() {
-  useEffect(() => {
+  useLayoutEffect(() => {
+    document.title = 'WorkTree-iD';
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, []);
 
